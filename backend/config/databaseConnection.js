@@ -1,23 +1,37 @@
+import mysql from "mysql2/promise";
 import dotenv from "dotenv";
-import tables from "../DB/databaseTable.js";
-import connection from "./db.js";
 dotenv.config();
 
 const DB_NAME = process.env.DB_NAME || "authsystem";
 
+const connection = mysql.createPool({
+  host: process.env.DB_HOST || "localhost",
+  user: process.env.DB_USER || "root",
+  password: process.env.DB_PASSWORD || "",
+  port: process.env.DB_PORT || 3306,
+  database: DB_NAME,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
+});
+
 const runSetup = async () => {
   try {
-    await connection.execute(`CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\``);
-    console.log(`Database '${DB_NAME}' created or exists`);
-
-    for (const query of tables) {
-      await connection.execute(query);
-    }
-
-    console.log("All tables created");
+    const db = await connection.getConnection();
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        username VARCHAR(255) NOT NULL UNIQUE,
+        email VARCHAR(255),
+        password_hash VARCHAR(255),
+        role_id INT
+      )
+    `);
+    db.release();
+    console.log("Database setup complete.");
   } catch (err) {
-    console.error("Setup error:", err.message);
+    console.error("Error setting up database:", err.message);
   }
 };
 
-export default runSetup;
+export { connection, runSetup };

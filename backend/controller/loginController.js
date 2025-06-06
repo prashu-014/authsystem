@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-import connection from "../config/databaseConnection.js";
+import { connection } from "../config/databaseConnection.js";
 
 dotenv.config();
 
